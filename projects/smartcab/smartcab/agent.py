@@ -16,8 +16,8 @@ class LearningAgent(Agent):
         self.q_table = {} # state string -> q_value list
         self.actions = env.valid_actions
 
-        self.gamma = 0.7
-        self.alpha = 0.5
+        self.gamma = 0.5
+        self.alpha = 0.2
         self.reach = []
         
         self.SA = {} #a table of frequencies for state-action pairs
@@ -121,11 +121,10 @@ def run():
     sim = Simulator(e, update_delay=0.0001, display=False)  # create simulator (uses pygame when display=True, if available)
     # NOTE: To speed up simulation, reduce update_delay and/or set display=False
 
-    sim.run(n_trials=1000)  # run for a specified number of trials
+    sim.run(n_trials=10000)  # run for a specified number of trials
     # NOTE: To quit midway, press Esc or close pygame window, or hit Ctrl+C on the command-line
-    print len(a.q_table)
-    print np.mean(a.reach)
-    print a.reach.count(0) / float(len(a.reach))
+    print a.q_table
+    print "Size of q_table = {}, fail rate = {}%".format(len(a.q_table), 100 * a.reach.count(0) / float(len(a.reach)))
 
 if __name__ == '__main__':
     run()
