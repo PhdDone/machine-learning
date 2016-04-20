@@ -21,11 +21,29 @@ class LearningAgent(Agent):
         self.reach = []
         
         self.SA = {} #a table of frequencies for state-action pairs
-        self.NE = 5  # try each action-state pair at least NE time
+        self.NE = 3  # try each action-state pair at least NE time
         self.reward_plus = 2
     def reset(self, destination=None):
         self.planner.route_to(destination)
         # TODO: Prepare for a new trip; reset any variables here, if required
+
+    def inputs_filter(self, inputs):
+        # Filter Rules:
+        # inputs = {'light': light, 'oncoming': oncoming, 'left': left, 'right': right}
+
+        inputs['right'] = None         # remove right traffic
+
+        light = inputs['light']
+
+        if light == 'green':          # if light is green, remove left traffic
+            inputs['left'] == None
+        
+        if light == 'red':           # if light is red, replace left traffic status to None if it's going right
+            left_waypoint = inputs['left']
+            if left_waypoint == 'right':
+                inputs['left'] = None
+            inputs['oncoming'] = None # if light is red, ignore oncoming traffic (assume others follow rules)
+        return inputs
 
     def next_action_index(self, current_state):
         if current_state not in self.q_table.keys():
@@ -75,6 +93,7 @@ class LearningAgent(Agent):
         # Gather inputs
         self.next_waypoint = self.planner.next_waypoint()  # from route planner, also displayed by simulator
         inputs = self.env.sense(self)
+        inputs = self.inputs_filter(inputs)
         deadline = self.env.get_deadline(self)
         
         # inputs = {'light': light, 'oncoming': oncoming, 'left': left, 'right': right}
@@ -121,7 +140,7 @@ def run():
     sim = Simulator(e, update_delay=0.0001, display=False)  # create simulator (uses pygame when display=True, if available)
     # NOTE: To speed up simulation, reduce update_delay and/or set display=False
 
-    sim.run(n_trials=10000)  # run for a specified number of trials
+    sim.run(n_trials=1000)  # run for a specified number of trials
     # NOTE: To quit midway, press Esc or close pygame window, or hit Ctrl+C on the command-line
     print a.q_table
     print "Size of q_table = {}, fail rate = {}%".format(len(a.q_table), 100 * a.reach.count(0) / float(len(a.reach)))
