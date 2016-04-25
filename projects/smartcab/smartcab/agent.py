@@ -16,13 +16,14 @@ class LearningAgent(Agent):
         self.q_table = {} # state string -> q_value list
         self.actions = env.valid_actions # valid_actions = [None, 'forward', 'left', 'right']
 
-        self.gamma = 0.5
+        self.gamma = 0.1
         self.alpha = 0.2
         self.reach = []
         
         self.SA = {} #a table of frequencies for state-action pairs
         self.NE = 3  # try each action-state pair at least NE time
         self.reward_plus = 2
+        self.current_state = ''
     def reset(self, destination=None):
         self.planner.route_to(destination)
         # TODO: Prepare for a new trip; reset any variables here, if required
@@ -79,8 +80,6 @@ class LearningAgent(Agent):
         
         max_action_index = q_state_action_values.index(max(q_state_action_values))
         
-        #print q_state_action_values
-        #print self.SA
         
         SA_key = current_state + str(max_action_index)
         self.SA[SA_key] += 1 #update SA map
@@ -105,6 +104,7 @@ class LearningAgent(Agent):
                 status = "*"
             current_state = current_state + '#' + key + ":" + status
         current_state = current_state + "#waypoint:" + self.next_waypoint
+        self.current_state = current_state
         #current_state = "#".join(map(lambda x : x if x is not None else "*", inputs.values()) + [self.next_waypoint])
         # choose next action
         # next_action = random.choice(self.actions)
@@ -138,7 +138,7 @@ class LearningAgent(Agent):
         #print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
 
     def get_state(self):
-        return 0
+        return self.current_state
 
 def run():
     """Run the agent for a finite number of trials."""
@@ -149,17 +149,17 @@ def run():
     e.set_primary_agent(a, enforce_deadline=True)  # specify agent to track
     # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
     # Now simulate it
-    sim = Simulator(e, update_delay=0.0001, display=False)  # create simulator (uses pygame when display=True, if available)
+    sim = Simulator(e, update_delay=0.5, display=True)  # create simulator (uses pygame when display=True, if available)
     # NOTE: To speed up simulation, reduce update_delay and/or set display=False
-    sim.run(n_trials=100)  # run for a specified number of trials
+    sim.run(n_trials=1000)  # run for a specified number of trials
     # NOTE: To quit midway, press Esc or close pygame window, or hit Ctrl+C on the command-line
     # print use the last one
     #for key in a.q_table.keys():
     #    print key + " ".join(str(a.q_table[key]))
-    #print "Size of q_table = {}, fail rate = {}%".format(len(a.q_table), 100 * a.reach.count(0) / float(len(a.reach)))
-    for key in a.q_table.keys():
-        print key + " ".join(str(a.q_table[key]))
-    return len(a.q_table), 100 * a.reach.count(0) / float(len(a.reach))
+    print "Size of q_table = {}, fail rate = {}%".format(len(a.q_table), 100 * a.reach.count(0) / float(len(a.reach)))
+    #for key in a.q_table.keys():
+    #    print key + " ".join(str(a.q_table[key]))
+    #return len(a.q_table), 100 * a.reach.count(0) / float(len(a.reach))
 def run_multi():
     ave_fr = 0
     ave_q_size = 0
@@ -171,3 +171,4 @@ def run_multi():
     
 if __name__ == '__main__':
     run()
+    #run_multi()
